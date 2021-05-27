@@ -2,9 +2,7 @@
 
 pragma solidity ^0.8.4;
 
-// Pour remix il faut importer une url depuis un repository github
-// Depuis un project Hardhat ou Truffle on utiliserait: import "@openzeppelin/ccontracts/utils/Address.sol";
-import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 
 contract Testament {
     // library usage
@@ -24,17 +22,19 @@ contract Testament {
 
     // constructor
     constructor(address owner_, address doctor_) {
+        require(owner_ != doctor_, "Testament: doctor must be different than owner");
         _owner = owner_;
         _doctor = doctor_;
+        emit DoctorSet(msg.sender, doctor_);
     }
 
     // modifiers
    modifier onlyOwner() {
-       require(msg.sender == _owner, "Testament : only Owner can use this function.");
+       require(msg.sender == _owner, "Testament : only Owner can use this function");
        _;
    }
       modifier onlyDoctor() {
-       require(msg.sender == _doctor, "Testament : only Doctor can use this function.");
+       require(msg.sender == _doctor, "Testament : only Doctor can use this function");
        _;
    }
    modifier contractEnded() {
@@ -44,12 +44,13 @@ contract Testament {
 
     // Function declarations below
     function setDoctor(address doctor_) public onlyOwner {
-        require(msg.sender != doctor_, "You cannot be your Doctor.");
+        require(msg.sender != doctor_, "You cannot be your Doctor");
         _doctor = doctor_; 
         emit DoctorSet(msg.sender, doctor_); 
     }
     function endContract() public onlyDoctor {
-        require(_endContract == false, "Testament : Contract is already ended."); 
+        require(_endContract == false, "Testament : Contract is already ended"); 
+        _endContract = true;
         emit ContractEnded(msg.sender); 
     }
     function bequeath(address recipient, uint256 legacy_) onlyOwner public payable {
@@ -63,4 +64,17 @@ contract Testament {
         emit Withdrawed(msg.sender, legacy_); 
     }
 
-    // Add getters
+    // getters
+    function owner() public view returns (address) {
+        return _owner;
+    }
+    function doctor() public view returns (address) {
+        return _doctor;
+    }
+    function isContractOver() public view returns (bool) {
+        return _endContract;
+    }
+    function legacyOf(address account) public view returns (uint256) {
+        return _legacy[account];
+    }
+}
