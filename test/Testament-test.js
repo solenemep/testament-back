@@ -1,10 +1,10 @@
 const { expect } = require("chai");
 
 describe("Testament", function() {
-  let Testament, testament, dev, owner, doctor, doctor2, alice
+  let Testament, testament, dev, owner, doctor, doctor2, alice, bob
 
   beforeEach(async function () {
-    [dev, owner, doctor, doctor2, alice] = await ethers.getSigners();
+    [dev, owner, doctor, doctor2, alice, bob] = await ethers.getSigners();
     Testament = await ethers.getContractFactory("Testament");
     testament = await Testament.connect(dev).deploy(owner.address, doctor.address);
     await testament.deployed();
@@ -60,34 +60,42 @@ describe("Testament", function() {
   
   describe('bequeath', function () {
     it(`Should revert if not owner`, async function () {
-      await expect(testament.connect(dev).bequeath(alice.address, 100)).to.be.revertedWith("Testament : only Owner can use this function");
+      await expect(testament.connect(dev).bequeath(alice.address, 1000)).to.be.revertedWith("Testament : only Owner can use this function");
     });
     it(`Should have legacy set`, async function () {
-      await testament.connect(owner).bequeath(alice.address, 100)
-      expect(await testament.legacyOf(alice.address)).to.equal(100);
+      await testament.connect(owner).bequeath(alice.address, 1000)
+      expect(await testament.legacyOf(alice.address)).to.equal(1000);
     });
     it('Emits Bequeathed event', async function () {
-      await expect(testament.connect(owner).bequeath(alice.address, 100)).to.emit(testament, 'Bequeathed').withArgs(owner.address, alice.address, 100);
+      await expect(testament.connect(owner).bequeath(alice.address, 1000)).to.emit(testament, 'Bequeathed').withArgs(owner.address, alice.address, 1000);
     })
   });
 
   describe('withdrawLegacy', function () {
 
     beforeEach(async function () {
-      await testament.connect(owner).bequeath(alice.address, 100);
+      await testament.connect(owner).bequeath(alice.address, 1000);
     })
 
     it(`Should revert if contract not ended`, async function () {
       await expect(testament.connect(alice).withdrawLegacy()).to.be.revertedWith("Testament : Owner is still alive");
+    });
+    it(`Should revert if legacy = 0`, async function () {
+      await testament.connect(doctor).endContract();
+      await expect(testament.connect(bob).withdrawLegacy()).to.be.revertedWith("Testament : nothing to withdraw");
     });
     it(`Should have legacy set to 0`, async function () {
       await testament.connect(doctor).endContract();
       await testament.connect(alice).withdrawLegacy();
       expect(await testament.legacyOf(alice.address)).to.equal(0);
     });
+    it('Should set balance recipient', async function () {
+      await testament.connect(doctor).endContract();
+      expect(await testament.connect(alice).withdrawLegacy()).to.changeEtherBalance(alice.address, 1000)
+    });
     it('Emits Withdrawed event', async function () {
       await testament.connect(doctor).endContract();
-      await expect(testament.connect(alice).withdrawLegacy()).to.emit(testament, 'Withdrawed').withArgs(alice.address, 100);
+      await expect(testament.connect(alice).withdrawLegacy()).to.emit(testament, 'Withdrawed').withArgs(alice.address, 1000);
     })
   });
 });

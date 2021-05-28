@@ -58,6 +58,7 @@ contract Testament {
         emit Bequeathed(msg.sender, recipient, legacy_); 
     }
     function withdrawLegacy() contractEnded public payable {
+        require(_legacy[msg.sender] != 0, "Testament : nothing to withdraw");
         uint256 legacy_ = _legacy[msg.sender];
         _legacy[msg.sender] = 0;
         payable(msg.sender).sendValue(legacy_);
