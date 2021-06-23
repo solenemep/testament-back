@@ -34,7 +34,7 @@ contract TestamentFactory is AccessControl {
         return true;
     }
 
-    /*
+    /* double saisie ...
     function endTestament(Testament testament) public onlyRole(ADMIN) returns (bool) {
         _testamentEnd[address(testament)] = true;
         emit TestamentEnded(address(testament));
