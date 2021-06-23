@@ -1,18 +1,20 @@
-const hre = require("hardhat");
+const hre = require('hardhat');
 
 async function main() {
+  const [deployer] = await ethers.getSigners();
+  console.log('Deploying contracts with the account:', deployer.address);
 
-  const Testament = await hre.ethers.getContractFactory("Testament");
+  const Testament = await hre.ethers.getContractFactory('Testament');
   const testament = await Testament.deploy();
 
   await testament.deployed();
 
-  console.log("Testament deployed to:", testament.address);
+  console.log('Testament deployed to:', testament.address);
 }
 
 main()
   .then(() => process.exit(0))
-  .catch(error => {
+  .catch((error) => {
     console.error(error);
     process.exit(1);
   });

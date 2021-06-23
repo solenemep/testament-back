@@ -11,8 +11,8 @@ contract Testament {
     // State variables
     address private _owner;
     address private _doctor;
-    bool private _endContract; 
-    mapping (address => uint256) private _legacy;
+    bool private _endContract;
+    mapping(address => uint256) private _legacy;
 
     // Events
     event DoctorSet(address indexed sender, address doctor);
@@ -29,52 +29,59 @@ contract Testament {
     }
 
     // modifiers
-   modifier onlyOwner() {
-       require(msg.sender == _owner, "Testament : only Owner can use this function");
-       _;
-   }
-      modifier onlyDoctor() {
-       require(msg.sender == _doctor, "Testament : only Doctor can use this function");
-       _;
-   }
-   modifier contractEnded() {
-       require(_endContract == true, "Testament : Owner is still alive");
-       _;
-   }
+    modifier onlyOwner() {
+        require(msg.sender == _owner, "Testament : only Owner can use this function");
+        _;
+    }
+    modifier onlyDoctor() {
+        require(msg.sender == _doctor, "Testament : only Doctor can use this function");
+        _;
+    }
+    modifier contractEnded() {
+        require(_endContract == true, "Testament : Owner is still alive");
+        _;
+    }
 
-    // Function declarations below
+    // functions
     function setDoctor(address doctor_) public onlyOwner {
         require(msg.sender != doctor_, "You cannot be your Doctor");
-        _doctor = doctor_; 
-        emit DoctorSet(msg.sender, doctor_); 
+        _doctor = doctor_;
+        emit DoctorSet(msg.sender, doctor_);
     }
+
     function endContract() public onlyDoctor {
-        require(_endContract == false, "Testament : Contract is already ended"); 
+        require(_endContract == false, "Testament : Contract is already ended");
         _endContract = true;
-        emit ContractEnded(msg.sender); 
+        emit ContractEnded(msg.sender);
     }
-    function bequeath(address recipient, uint256 legacy_) onlyOwner public payable {
+
+    function bequeath(address recipient) public payable onlyOwner {
+        uint256 legacy_ = msg.value;
         _legacy[recipient] += legacy_;
-        emit Bequeathed(msg.sender, recipient, legacy_); 
+        emit Bequeathed(msg.sender, recipient, legacy_);
     }
-    function withdrawLegacy() contractEnded public payable {
+
+    function withdrawLegacy() public contractEnded {
         require(_legacy[msg.sender] != 0, "Testament : nothing to withdraw");
         uint256 legacy_ = _legacy[msg.sender];
         _legacy[msg.sender] = 0;
         payable(msg.sender).sendValue(legacy_);
-        emit Withdrawed(msg.sender, legacy_); 
+        emit Withdrawed(msg.sender, legacy_);
     }
 
     // getters
     function owner() public view returns (address) {
         return _owner;
     }
+
     function doctor() public view returns (address) {
         return _doctor;
     }
+
     function isContractOver() public view returns (bool) {
         return _endContract;
     }
+
     function legacyOf(address account) public view returns (uint256) {
         return _legacy[account];
     }
